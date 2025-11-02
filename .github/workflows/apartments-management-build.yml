@@ -1,0 +1,27 @@
+name: Build and run tests for BoscoStay.AparmentsManagement
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore NuGet packages
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build -c Release
+
+      - name: Run tests
+        run: dotnet test BoscoStay.ApartmentsManagement.Tests/BoscoStay.ApartmentsManagement.Tests.csproj --no-restore -c Release
