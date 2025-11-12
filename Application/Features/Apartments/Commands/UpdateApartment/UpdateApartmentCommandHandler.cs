@@ -1,11 +1,12 @@
 ﻿using Application.Contracts.Repos;
+using Application.Contracts.Services;
 using Application.Response;
 using Domain.Entities;
 using MediatR;
 
 namespace Application.Features.Apartments.Commands.UpdateApartment
 {
-    internal class UpdateApartmentCommandHandler(IBaseRepo<Apartment> _apartmentRepo)
+    internal class UpdateApartmentCommandHandler(IBaseRepo<Apartment> _apartmentRepo, IQueueService _queueService)
         : IRequestHandler<UpdateApartmentCommand, ApiResponse<UpdateApartmentCommandResponse>>
     {
         public async Task<ApiResponse<UpdateApartmentCommandResponse>> Handle(UpdateApartmentCommand request, CancellationToken cancellationToken)
@@ -26,7 +27,7 @@ namespace Application.Features.Apartments.Commands.UpdateApartment
 
             await _apartmentRepo.UpdateAsync(apartment);
 
-            //send to queue
+            await _queueService.PublishChange(apartment, Domain.Enums.ApartmentChangeEnum.Update);
 
             return ApiResponse<UpdateApartmentCommandResponse>.GetSuccessApiResponse(new());
         }

@@ -6,10 +6,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Persistence.Implementation.BackgroundServices;
 using Persistence.Implementation.Helpers;
 using Persistence.Implementation.Repos;
 using Persistence.Implementation.Services;
+using RabbitMQ.Client;
 
 namespace Persistence
 {
@@ -35,6 +35,8 @@ namespace Persistence
 
             services.AddHelpers();
 
+            services.AddRabbitMQConnection(_config);
+
             return services;
         }
 
@@ -55,6 +57,7 @@ namespace Persistence
         {
             services.AddScoped<IFileService, FileService>();
             services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<IQueueService, RabbitQueueService>();
         }
 
         private static void AddBackgroundServices(this IServiceCollection services)
@@ -93,6 +96,24 @@ namespace Persistence
                 options.User.RequireUniqueEmail = true;
 
                 options.SignIn.RequireConfirmedEmail = true;
+            });
+        }
+
+        public static void AddRabbitMQConnection(this IServiceCollection services, IConfiguration _config)
+        {
+            services.AddSingleton<IConnection>(sp =>
+            {
+                var factory = new ConnectionFactory
+                {
+                    HostName = _config.GetValue<string>("RabbitMQ:Host") ?? "host.docker.internal",
+                };
+                return factory.CreateConnectionAsync().Result;
+            });
+
+            services.AddScoped<IChannel>(sp =>
+            {
+                var connection = sp.GetRequiredService<IConnection>();
+                return connection.CreateChannelAsync().Result;
             });
         }
     }

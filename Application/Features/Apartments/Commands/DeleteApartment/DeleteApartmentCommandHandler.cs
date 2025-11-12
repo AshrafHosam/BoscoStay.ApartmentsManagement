@@ -1,11 +1,12 @@
 ﻿using Application.Contracts.Repos;
+using Application.Contracts.Services;
 using Application.Response;
 using Domain.Entities;
 using MediatR;
 
 namespace Application.Features.Apartments.Commands.DeleteApartment
 {
-    public class DeleteApartmentCommandHandler(IBaseRepo<Apartment> _apartmentRepo)
+    public class DeleteApartmentCommandHandler(IBaseRepo<Apartment> _apartmentRepo, IQueueService _queueService)
         : IRequestHandler<DeleteApartmentCommand, ApiResponse<DeleteApartmentCommandResponse>>
     {
         public async Task<ApiResponse<DeleteApartmentCommandResponse>> Handle(DeleteApartmentCommand request, CancellationToken cancellationToken)
@@ -16,7 +17,11 @@ namespace Application.Features.Apartments.Commands.DeleteApartment
 
             await _apartmentRepo.DeleteAsync(request.Id);
 
-            //send to queue
+            await _queueService.PublishChange(new Apartment()
+            {
+                Id = request.Id,
+                IsDeleted = true
+            }, Domain.Enums.ApartmentChangeEnum.Delete);
 
             return ApiResponse<DeleteApartmentCommandResponse>.GetNoContentApiResponse();
         }

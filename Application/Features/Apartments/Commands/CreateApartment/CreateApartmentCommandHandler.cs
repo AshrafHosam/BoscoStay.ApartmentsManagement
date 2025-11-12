@@ -1,16 +1,17 @@
 ﻿using Application.Contracts.Repos;
+using Application.Contracts.Services;
 using Application.Response;
 using Domain.Entities;
 using MediatR;
 
 namespace Application.Features.Apartments.Commands.CreateApartment
 {
-    internal class CreateApartmentCommandHandler(IBaseRepo<Apartment> _apartmentRepo)
+    internal class CreateApartmentCommandHandler(IBaseRepo<Apartment> _apartmentRepo, IQueueService _queueService)
         : IRequestHandler<CreateApartmentCommand, ApiResponse<CreateApartmentCommandResponse>>
     {
         public async Task<ApiResponse<CreateApartmentCommandResponse>> Handle(CreateApartmentCommand request, CancellationToken cancellationToken)
         {
-            await _apartmentRepo.AddAsync(new Apartment
+            var apartment = await _apartmentRepo.AddAsync(new Apartment
             {
                 Address = request.Address,
                 AreaInSquareMeters = request.AreaInSquareMeters,
@@ -23,7 +24,7 @@ namespace Application.Features.Apartments.Commands.CreateApartment
                 PricePerMonth = request.PricePerMonth
             });
 
-            //send to queue
+            await _queueService.PublishChange(apartment, Domain.Enums.ApartmentChangeEnum.Create);
 
             return ApiResponse<CreateApartmentCommandResponse>.GetCreatedApiResponse();
         }
