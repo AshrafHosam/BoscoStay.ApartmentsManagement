@@ -21,7 +21,8 @@ namespace Application.Features.Apartments.Commands.CreateApartment
                 Name = request.Name,
                 NoiseLevel = request.NoiseLevel,
                 PricePerDay = request.PricePerDay,
-                PricePerMonth = request.PricePerMonth
+                PricePerMonth = request.PricePerMonth,
+                IsFurnished = request.IsFurnished
             });
 
             await _queueService.PublishChange(apartment, Domain.Enums.ApartmentChangeEnum.Create);

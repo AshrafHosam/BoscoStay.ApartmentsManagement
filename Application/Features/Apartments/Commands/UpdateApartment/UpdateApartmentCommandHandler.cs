@@ -24,6 +24,8 @@ namespace Application.Features.Apartments.Commands.UpdateApartment
             apartment.DistanceToCenterInKm = request.DistanceToCenterInKm;
             apartment.PricePerDay = request.PricePerDay;
             apartment.PricePerMonth = request.PricePerMonth;
+            apartment.IsFurnished = request.IsFurnished;
+            apartment.AreaInSquareMeters = request.AreaInSquareMeters;
 
             await _apartmentRepo.UpdateAsync(apartment);
 

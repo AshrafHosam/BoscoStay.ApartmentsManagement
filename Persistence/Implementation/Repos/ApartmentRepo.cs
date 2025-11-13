@@ -39,6 +39,8 @@ namespace Persistence.Implementation.Repos
                 || EF.Functions.ILike(a.Address, $"%{query.SearchText}%")))
                 .Skip(query.PageSize * (query.PageNumber - 1))
                 .Take(query.PageSize)
+                .OrderByDescending(a => a.CreatedDate)
+                .OrderByDescending(a => a.PricePerMonth)
                 .ToListAsync();
     }
 }

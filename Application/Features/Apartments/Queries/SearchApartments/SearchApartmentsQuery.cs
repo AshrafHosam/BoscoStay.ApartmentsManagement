@@ -8,7 +8,7 @@ namespace Application.Features.Apartments.Queries.SearchApartments
     {
         public string SearchText { get; set; }
         public int PageNumber { get; set; } = 1;
-        public int PageSize { get; set; } = 10;
+        public int PageSize { get; set; } = 100;
         public bool? IsFurnished { get; set; }
         public double? MaxPrice { get; set; }
         public NoiseLevelEnum? NoiseLevel { get; set; }
