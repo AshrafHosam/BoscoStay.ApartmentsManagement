@@ -1,0 +1,42 @@
+name: SearchService CI
+
+on:
+  push:
+    paths:
+      - 'SearchService/**'
+      - '.github/workflows/searchservice-ci.yml'
+  pull_request:
+    paths:
+      - 'SearchService/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    # All commands below run inside the SearchService folder
+    defaults:
+      run:
+        working-directory: SearchService
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Build and test with Maven
+        run: mvn -B test
+
+      - name: Package application
+        run: mvn -B package
+
+      - name: Upload built jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: searchservice-jar
+          path: target/*.jar
