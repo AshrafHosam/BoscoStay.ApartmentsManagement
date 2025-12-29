@@ -23,7 +23,6 @@ namespace Application.Features.Apartments.Commands.UpdateApartment
             apartment.NoiseLevel = request.NoiseLevel;
             apartment.DistanceToCenterInKm = request.DistanceToCenterInKm;
             apartment.PricePerDay = request.PricePerDay;
-            apartment.PricePerMonth = request.PricePerMonth;
             apartment.IsFurnished = request.IsFurnished;
             apartment.AreaInSquareMeters = request.AreaInSquareMeters;
 

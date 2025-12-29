@@ -17,8 +17,7 @@ namespace Persistence.Implementation.Repos
                 .FilterIf(query.NoiseLevel.HasValue, a => a.NoiseLevel == query.NoiseLevel.Value)
                 .FilterIf(query.MaxArea.HasValue, a => a.AreaInSquareMeters <= query.MaxArea.Value)
                 .FilterIf(query.MaxDistanceToCenter.HasValue, a => a.DistanceToCenterInKm <= query.MaxDistanceToCenter.Value)
-                .FilterIf(query.MaxPrice.HasValue, a => (a.PricePerDay.HasValue && a.PricePerDay.Value <= query.MaxPrice.Value) ||
-                        (a.PricePerMonth.HasValue && a.PricePerMonth.Value <= query.MaxPrice.Value))
+                .FilterIf(query.MaxPrice.HasValue, a => (a.PricePerDay <= query.MaxPrice.Value))
                 .FilterIf(!string.IsNullOrEmpty(query.SearchText),
                 a => (EF.Functions.ILike(a.Name, $"%{query.SearchText}%")
                 || EF.Functions.ILike(a.Description, $"%{query.SearchText}%")
@@ -31,8 +30,7 @@ namespace Persistence.Implementation.Repos
                 .FilterIf(query.NoiseLevel.HasValue, a => a.NoiseLevel == query.NoiseLevel.Value)
                 .FilterIf(query.MaxArea.HasValue, a => a.AreaInSquareMeters <= query.MaxArea.Value)
                 .FilterIf(query.MaxDistanceToCenter.HasValue, a => a.DistanceToCenterInKm <= query.MaxDistanceToCenter.Value)
-                .FilterIf(query.MaxPrice.HasValue, a => (a.PricePerDay.HasValue && a.PricePerDay.Value <= query.MaxPrice.Value) ||
-                        (a.PricePerMonth.HasValue && a.PricePerMonth.Value <= query.MaxPrice.Value))
+                .FilterIf(query.MaxPrice.HasValue, a => (a.PricePerDay <= query.MaxPrice.Value))
                 .FilterIf(!string.IsNullOrEmpty(query.SearchText),
                 a => (EF.Functions.ILike(a.Name, $"%{query.SearchText}%")
                 || EF.Functions.ILike(a.Description, $"%{query.SearchText}%")
@@ -40,7 +38,6 @@ namespace Persistence.Implementation.Repos
                 .Skip(query.PageSize * (query.PageNumber - 1))
                 .Take(query.PageSize)
                 .OrderByDescending(a => a.CreatedDate)
-                .OrderByDescending(a => a.PricePerMonth)
                 .ToListAsync();
     }
 }

@@ -39,17 +39,9 @@ namespace Application.Features.Apartments.Commands.UpdateApartment
                 .NotNull()
                 .GreaterThanOrEqualTo(0.0);
 
-            When(a => a.PricePerMonth.HasValue, () =>
-            {
-                RuleFor(b => b.PricePerMonth.Value)
-                    .GreaterThan(0.0);
-            });
-
-            When(a => a.PricePerDay.HasValue, () =>
-            {
-                RuleFor(b => b.PricePerDay.Value)
-                    .GreaterThan(0.0);
-            });
+            RuleFor(b => b.PricePerDay)
+                .NotNull()
+                .GreaterThanOrEqualTo(0.0);
         }
     }
 }

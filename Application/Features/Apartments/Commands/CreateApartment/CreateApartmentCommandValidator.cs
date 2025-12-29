@@ -34,17 +34,8 @@ namespace Application.Features.Apartments.Commands.CreateApartment
                 .NotNull()
                 .GreaterThanOrEqualTo(0.0);
 
-            When(a => a.PricePerMonth.HasValue, () =>
-            {
-                RuleFor(b => b.PricePerMonth.Value)
-                    .GreaterThan(0.0);
-            });
-
-            When(a => a.PricePerDay.HasValue, () =>
-            {
-                RuleFor(b => b.PricePerDay.Value)
-                    .GreaterThan(0.0);
-            });
+            RuleFor(b => b.PricePerDay)
+                .GreaterThanOrEqualTo(0.0);
 
         }
     }

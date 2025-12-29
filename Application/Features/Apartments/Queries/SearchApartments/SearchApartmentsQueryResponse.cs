@@ -20,7 +20,6 @@ namespace Application.Features.Apartments.Queries.SearchApartments
         public bool IsVisible { get; set; } = true;
         public double AreaInSquareMeters { get; set; } = 0.0;
         public bool IsFurnished { get; set; } = false;
-        public double? PricePerDay { get; set; }
-        public double? PricePerMonth { get; set; }
+        public double PricePerDay { get; set; }
     }
 }

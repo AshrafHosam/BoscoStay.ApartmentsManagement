@@ -27,8 +27,7 @@ namespace Application.Features.Apartments.Queries.SearchApartments
                     IsFurnished = a.IsFurnished,
                     IsVisible = a.IsVisible,
                     NoiseLevel = a.NoiseLevel,
-                    PricePerDay = a.PricePerDay,
-                    PricePerMonth = a.PricePerMonth
+                    PricePerDay = a.PricePerDay
                 }).ToList()
             });
         }

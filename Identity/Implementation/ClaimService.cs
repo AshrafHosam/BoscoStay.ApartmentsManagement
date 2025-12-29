@@ -18,6 +18,21 @@ namespace Identity.Implementation
             _encryptionHelper = encryptionHelper;
         }
 
+        /// <summary>
+        /// Get user ip address in the format of {remoteIpAddress}[/{XForwardedFor}]  (header will be present only if it is behind a proxy)
+        /// </summary>
+        /// <returns></returns>
+        public string GetUserIpAddress()
+        {
+            var remoteIpAddress = _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress.ToString();
+            var xForwardedFor = _httpContextAccessor.HttpContext?.Request.Headers["X-Forwarded-For"].ToString();
+
+            if (string.IsNullOrWhiteSpace(xForwardedFor))
+                return remoteIpAddress;
+
+            return $"{remoteIpAddress}[/{xForwardedFor}]";
+        }
+
         public string GetUserId()
         {
             var claimValue = GetClaim(ClaimTypes.NameIdentifier);

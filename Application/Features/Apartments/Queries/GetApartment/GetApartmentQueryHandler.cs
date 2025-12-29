@@ -26,8 +26,7 @@ namespace Application.Features.Apartments.Queries.GetApartment
                 IsVisible = apartment.IsVisible,
                 Name = apartment.Name,
                 NoiseLevel = apartment.NoiseLevel,
-                PricePerDay = apartment.PricePerDay,
-                PricePerMonth = apartment.PricePerMonth
+                PricePerDay = apartment.PricePerDay
             });
         }
     }

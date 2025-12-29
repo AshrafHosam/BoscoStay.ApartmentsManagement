@@ -21,7 +21,6 @@ namespace Domain.Entities
         public bool IsVisible { get; set; } = true;
         public double AreaInSquareMeters { get; set; }
         public bool IsFurnished { get; set; }
-        public double? PricePerDay { get; set; }
-        public double? PricePerMonth { get; set; }
+        public double PricePerDay { get; set; }
     }
 }

@@ -21,7 +21,6 @@ namespace Application.Features.Apartments.Commands.CreateApartment
                 Name = request.Name,
                 NoiseLevel = request.NoiseLevel,
                 PricePerDay = request.PricePerDay,
-                PricePerMonth = request.PricePerMonth,
                 IsFurnished = request.IsFurnished
             });
 

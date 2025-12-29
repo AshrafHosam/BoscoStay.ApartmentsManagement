@@ -2,10 +2,8 @@
 using Domain.Common;
 using Domain.Entities;
 using Domain.LogEntities;
-using Identity.Entities;
 using Identity.Enums;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Persistence.Configurations;
@@ -77,21 +75,23 @@ namespace Persistence
 
         public new async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new())
         {
+            var userId = _claimService.GetUserId();
+
             foreach (var entry in ChangeTracker.Entries<IAuditable>())
                 switch (entry.State)
                 {
                     case EntityState.Added:
                         entry.Entity.CreatedDate = DateTimeOffset.UtcNow;
-                        entry.Entity.CreatedBy = _claimService.GetUserId();
+                        entry.Entity.CreatedBy = string.IsNullOrEmpty(userId) ? _claimService.GetUserIpAddress() : userId;
                         break;
                     case EntityState.Modified:
                         entry.Entity.UpdatedDate = DateTimeOffset.UtcNow;
-                        entry.Entity.UpdatedBy = _claimService.GetUserId();
+                        entry.Entity.UpdatedBy = string.IsNullOrEmpty(userId) ? _claimService.GetUserIpAddress() : userId;
                         break;
                     case EntityState.Deleted:
                         entry.Entity.DeletedDate = DateTimeOffset.UtcNow;
                         entry.Entity.IsDeleted = true;
-                        entry.Entity.DeletedBy = _claimService.GetUserId();
+                        entry.Entity.DeletedBy = string.IsNullOrEmpty(userId) ? _claimService.GetUserIpAddress() : userId;
                         entry.State = EntityState.Modified;
                         break;
                 }

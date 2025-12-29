@@ -56,7 +56,7 @@ namespace BoscoStay.ApartmentsManagement
 
                 var migrator = dbContext.GetService<IMigrator>();
 
-                await migrator.MigrateAsync("20251112020034_remove_apartment_pricePerHour_column");
+                await migrator.MigrateAsync("20251229192804_apartmentTable_remove_nullablePrice_remove_pricePerMonth_column");
             }
 
             // Configure the HTTP request pipeline.
