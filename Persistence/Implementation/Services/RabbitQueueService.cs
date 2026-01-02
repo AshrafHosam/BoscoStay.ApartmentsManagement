@@ -23,7 +23,7 @@ namespace Persistence.Implementation.Services
 
                 var body = Encoding.UTF8.GetBytes(json);
 
-                await _queueChannel.BasicPublishAsync("", _config.GetValue<string>("RabbitMQ:QueueName"), body);
+                await _queueChannel.BasicPublishAsync(_config.GetValue<string>("RabbitMQ:ExchangeName"), "", body);
             }
             catch (Exception ex)
             {
