@@ -106,6 +106,9 @@ namespace Persistence
                 var factory = new ConnectionFactory
                 {
                     HostName = _config.GetValue<string>("RabbitMQ:Host") ?? "host.docker.internal",
+                    UserName = _config.GetValue<string>("RabbitMQ:Username") ?? "guest",
+                    Password = _config.GetValue<string>("RabbitMQ:Password") ?? "guest",
+                    VirtualHost = _config.GetValue<string>("RabbitMQ:VirtualHost") ?? "/"
                 };
                 return factory.CreateConnectionAsync().Result;
             });
