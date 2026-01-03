@@ -38,8 +38,8 @@ namespace Persistence.Implementation.Services
         private async Task DeclareMessageingChannels()
         {
             await _queueChannel.ExchangeDeclareAsync(_config.GetValue<string>("RabbitMQ:ExchangeName"), ExchangeType.Fanout);
-            await _queueChannel.QueueDeclareAsync(_config.GetValue<string>("RabbitMQ:SearchQueueName"));
-            await _queueChannel.QueueDeclareAsync(_config.GetValue<string>("RabbitMQ:BookingQueueName"));
+            await _queueChannel.QueueDeclareAsync(_config.GetValue<string>("RabbitMQ:SearchQueueName"), exclusive: false);
+            await _queueChannel.QueueDeclareAsync(_config.GetValue<string>("RabbitMQ:BookingQueueName"), exclusive: false);
             await _queueChannel.QueueBindAsync(_config.GetValue<string>("RabbitMQ:SearchQueueName"), _config.GetValue<string>("RabbitMQ:ExchangeName"), "");
             await _queueChannel.QueueBindAsync(_config.GetValue<string>("RabbitMQ:BookingQueueName"), _config.GetValue<string>("RabbitMQ:ExchangeName"), "");
         }
