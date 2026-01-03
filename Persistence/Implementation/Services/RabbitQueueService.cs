@@ -15,6 +15,8 @@ namespace Persistence.Implementation.Services
         {
             try
             {
+                await DeclareMessageingChannels();
+
                 var json = JsonSerializer.Serialize(new
                 {
                     apartment,
@@ -27,8 +29,19 @@ namespace Persistence.Implementation.Services
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
+
                 _logger.LogError(ex, ex.Message);
             }
+        }
+
+        private async Task DeclareMessageingChannels()
+        {
+            await _queueChannel.ExchangeDeclareAsync(_config.GetValue<string>("RabbitMQ:ExchangeName"), ExchangeType.Fanout);
+            await _queueChannel.QueueDeclareAsync(_config.GetValue<string>("RabbitMQ:SearchQueueName"));
+            await _queueChannel.QueueDeclareAsync(_config.GetValue<string>("RabbitMQ:BookingQueueName"));
+            await _queueChannel.QueueBindAsync(_config.GetValue<string>("RabbitMQ:SearchQueueName"), _config.GetValue<string>("RabbitMQ:ExchangeName"), "");
+            await _queueChannel.QueueBindAsync(_config.GetValue<string>("RabbitMQ:BookingQueueName"), _config.GetValue<string>("RabbitMQ:ExchangeName"), "");
         }
     }
 }
