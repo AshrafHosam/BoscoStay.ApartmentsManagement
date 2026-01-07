@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Persistence.Implementation.BackgroundServices;
 using Persistence.Implementation.Helpers;
 using Persistence.Implementation.Repos;
 using Persistence.Implementation.Services;
@@ -63,6 +64,7 @@ namespace Persistence
         private static void AddBackgroundServices(this IServiceCollection services)
         {
             //services.AddHostedService<DbLogsCleanupService>();
+            services.AddHostedService<RabbitMQConfigurationsService>();
         }
 
         private static void AddFactories(this IServiceCollection services)
