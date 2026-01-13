@@ -84,7 +84,6 @@ namespace Persistence.Implementation.Repos
         {
             return await _context.Set<T>()
                 .OrderByDescending(a => a.CreatedDate)
-                .Take(0..50)
                 .ToListAsync();
         }
         /// <summary>

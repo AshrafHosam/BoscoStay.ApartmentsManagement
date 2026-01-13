@@ -2,6 +2,7 @@
 using Application.Features.Apartments.Commands.DeleteApartment;
 using Application.Features.Apartments.Commands.UpdateApartment;
 using Application.Features.Apartments.Queries.GetApartment;
+using Application.Features.Apartments.Queries.GetCategorization;
 using Application.Features.Apartments.Queries.SearchApartments;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -59,6 +60,17 @@ namespace BoscoStay.ApartmentsManagement.Controllers
         [ProducesResponseType(typeof(SearchApartmentsQueryResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<string>), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<SearchApartmentsQueryResponse>> SearchApartment([FromQuery] SearchApartmentsQuery query)
+        {
+            var result = await _mediator.Send(query);
+
+            return GetApiResponse(result);
+        }
+
+        [AllowAnonymous]
+        [HttpGet("CategorizedApartments")]
+        [ProducesResponseType(typeof(GetCategorizationQueryResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<string>), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<GetCategorizationQueryResponse>> GetCategorizedApartments([FromQuery] GetCategorizationQuery query)
         {
             var result = await _mediator.Send(query);
 
