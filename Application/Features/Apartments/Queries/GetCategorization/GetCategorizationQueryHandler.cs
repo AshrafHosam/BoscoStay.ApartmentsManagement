@@ -159,56 +159,40 @@ namespace Application.Features.Apartments.Queries.GetCategorization
             var json = JsonSerializer.Serialize(modelRequest);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            // Use streaming mode
-            using var response = await client.PostAsync(url, content);
+            var response = await client.PostAsync(url, content);
             Console.WriteLine("Status: " + (int)response.StatusCode);
 
+            var responseBody = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("Raw response:");
+            Console.WriteLine(responseBody);
+
             var categorization = new List<CategorizationDto>();
-            var sbOutput = new StringBuilder();
-
-            using var stream = await response.Content.ReadAsStreamAsync();
-            using var reader = new StreamReader(stream);
-            while (!reader.EndOfStream)
+            try
             {
-                var line = await reader.ReadLineAsync();
-                if (string.IsNullOrWhiteSpace(line)) continue;
-
-                try
+                using var doc = JsonDocument.Parse(responseBody);
+                var choices = doc.RootElement.GetProperty("choices");
+                if (choices.GetArrayLength() > 0)
                 {
-                    using var doc = JsonDocument.Parse(line);
-                    if (doc.RootElement.TryGetProperty("message", out var msg) &&
-                        msg.TryGetProperty("content", out var contentProp))
-                    {
-                        sbOutput.Append(contentProp.GetString());
-                    }
+                    var message = choices[0].GetProperty("message");
+                    var assistantContent = message.GetProperty("content").GetString();
 
-                    if (doc.RootElement.TryGetProperty("done", out var doneProp) &&
-                        doneProp.GetBoolean())
+                    Console.WriteLine("Assistant content:");
+                    Console.WriteLine(assistantContent);
+
+                    // Strip any explanatory text before the JSON array
+                    var startIndex = assistantContent.IndexOf('[');
+                    var endIndex = assistantContent.LastIndexOf(']');
+                    if (startIndex >= 0 && endIndex > startIndex)
                     {
-                        break; // finished
+                        var jsonArray = assistantContent.Substring(startIndex, endIndex - startIndex + 1);
+                        categorization = JsonSerializer.Deserialize<List<CategorizationDto>>(jsonArray,
+                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<CategorizationDto>();
                     }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Streaming parse error: " + ex.Message);
                 }
             }
-
-            var assistantContent = sbOutput.ToString();
-            Console.WriteLine("Aggregated assistant output:");
-            Console.WriteLine(assistantContent);
-
-            if (!string.IsNullOrEmpty(assistantContent))
+            catch (Exception ex)
             {
-                try
-                {
-                    categorization = JsonSerializer.Deserialize<List<CategorizationDto>>(assistantContent,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<CategorizationDto>();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Deserialization error: " + ex.Message);
-                }
+                Console.WriteLine("Parsing error: " + ex.Message);
             }
 
             Console.WriteLine("Categorization:");
