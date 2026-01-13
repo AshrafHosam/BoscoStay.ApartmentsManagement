@@ -64,7 +64,7 @@ namespace Persistence
         private static void AddBackgroundServices(this IServiceCollection services)
         {
             //services.AddHostedService<DbLogsCleanupService>();
-            services.AddHostedService<RabbitMQConfigurationsService>();
+            //services.AddHostedService<RabbitMQConfigurationsService>();
         }
 
         private static void AddFactories(this IServiceCollection services)

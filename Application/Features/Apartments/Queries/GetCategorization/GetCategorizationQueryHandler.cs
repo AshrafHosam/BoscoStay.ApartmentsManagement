@@ -41,7 +41,6 @@ namespace Application.Features.Apartments.Queries.GetCategorization
 
         private async Task<(HttpClient client, List<CategorizationDto> categorization)> CallOllamaModel(IEnumerable<Apartment> apartments)
         {
-            // Ollama local endpoint
             var url = "http://host.docker.internal:11434/api/chat";
 
             using var client = new HttpClient();
@@ -49,54 +48,64 @@ namespace Application.Features.Apartments.Queries.GetCategorization
 
             // Build prompt dynamically from apartments
             var sb = new StringBuilder();
-            sb.AppendLine("Classify each apartment into a new category. Return JSON list with each object:");
-            sb.AppendLine("ApartmentId (GUID) and Category (string).");
+            sb.AppendLine("Classify each apartment into a new category. Respond strictly with valid JSON array of objects:");
+            sb.AppendLine("[{ \"ApartmentId\": \"...\", \"Category\": \"...\" }]");
             foreach (var apt in apartments)
             {
                 sb.AppendLine($"ApartmentId: {apt.Id}, Name: {apt.Name}, Address: {apt.Address}, Floor: {apt.Floor}, NoiseLevel: {apt.NoiseLevel}, Area: {apt.AreaInSquareMeters} m², PricePerDay: {apt.PricePerDay}");
             }
 
-            // Ollama chat API expects: { "model": "...", "messages": [...] }
             var modelRequest = new
             {
-                model = "gpt-oss:120b-cloud",
+                model = "gpt-oss:120b-cloud", // or whichever local model you want
                 messages = new List<object>
-                {
-                    new { role = "user", content = sb.ToString() }
-                }
+        {
+            new { role = "user", content = sb.ToString() }
+        }
             };
 
             var json = JsonSerializer.Serialize(modelRequest);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = await client.PostAsync(url, content);
+            // Important: use ResponseHeadersRead so we can stream line by line
+            using var response = await client.PostAsync(url, content);
             Console.WriteLine("Status: " + (int)response.StatusCode);
 
-            var responseBody = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("Response:");
-            Console.WriteLine(responseBody);
+            var categorization = new List<CategorizationDto>();
+            var sbOutput = new StringBuilder();
 
-            // Ollama returns a streaming JSON by default. If you want the final message only,
-            // you may need to parse the "message" field from the last object.
-            // Example: { "model":"...", "message":{"role":"assistant","content":"..."} }
-
-            // Extract the assistant's content
-            string? assistantContent = null;
-            try
+            using var stream = await response.Content.ReadAsStreamAsync();
+            using var reader = new StreamReader(stream);
+            while (!reader.EndOfStream)
             {
-                using var doc = JsonDocument.Parse(responseBody);
-                if (doc.RootElement.TryGetProperty("message", out var msg) &&
-                    msg.TryGetProperty("content", out var contentProp))
+                var line = await reader.ReadLineAsync();
+                if (string.IsNullOrWhiteSpace(line)) continue;
+
+                try
                 {
-                    assistantContent = contentProp.GetString();
+                    using var doc = JsonDocument.Parse(line);
+                    if (doc.RootElement.TryGetProperty("message", out var msg) &&
+                        msg.TryGetProperty("content", out var contentProp))
+                    {
+                        sbOutput.Append(contentProp.GetString());
+                    }
+
+                    if (doc.RootElement.TryGetProperty("done", out var doneProp) &&
+                        doneProp.GetBoolean())
+                    {
+                        break; // finished
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Streaming parse error: " + ex.Message);
                 }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Parsing error: " + ex.Message);
-            }
 
-            var categorization = new List<CategorizationDto>();
+            var assistantContent = sbOutput.ToString();
+            Console.WriteLine("Aggregated assistant output:");
+            Console.WriteLine(assistantContent);
+
             if (!string.IsNullOrEmpty(assistantContent))
             {
                 try
@@ -119,6 +128,7 @@ namespace Application.Features.Apartments.Queries.GetCategorization
             return (client, categorization);
         }
 
+
         private async Task<(HttpClient client, List<CategorizationDto> categorization)> CallUnibzModel(IEnumerable<Apartment> apartments)
         {
             var url = _configuration.GetValue<string>("Ollama:Url");
@@ -130,8 +140,8 @@ namespace Application.Features.Apartments.Queries.GetCategorization
 
             // Build prompt dynamically from apartments
             var sb = new StringBuilder();
-            sb.AppendLine("Classify each apartment into a new category. Return JSON list with each object:");
-            sb.AppendLine("ApartmentId (GUID) and Category (string).");
+            sb.AppendLine("Classify each apartment into a new category. Respond strictly with valid JSON array of objects:");
+            sb.AppendLine("[{ \"ApartmentId\": \"...\", \"Category\": \"...\" }]");
             foreach (var apt in apartments)
             {
                 sb.AppendLine($"ApartmentId: {apt.Id}, Name: {apt.Name}, Address: {apt.Address}, Floor: {apt.Floor}, NoiseLevel: {apt.NoiseLevel}, Area: {apt.AreaInSquareMeters} m², PricePerDay: {apt.PricePerDay}");
@@ -141,26 +151,65 @@ namespace Application.Features.Apartments.Queries.GetCategorization
             {
                 model = "llama3:latest",
                 messages = new List<object>
-                {
-                    new  { role = "user", content = sb.ToString() }
-                }
+        {
+            new { role = "user", content = sb.ToString() }
+        }
             };
 
             var json = JsonSerializer.Serialize(modelRequest);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = await client.PostAsync(url, content);
+            // Use streaming mode
+            using var response = await client.PostAsync(url, content);
             Console.WriteLine("Status: " + (int)response.StatusCode);
 
-            var responseBody = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("Response:");
-            Console.WriteLine(responseBody);
+            var categorization = new List<CategorizationDto>();
+            var sbOutput = new StringBuilder();
 
-            var categorization = JsonSerializer.Deserialize<List<CategorizationDto>>(responseBody,
-                new JsonSerializerOptions
+            using var stream = await response.Content.ReadAsStreamAsync();
+            using var reader = new StreamReader(stream);
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync();
+                if (string.IsNullOrWhiteSpace(line)) continue;
+
+                try
                 {
-                    PropertyNameCaseInsensitive = true
-                });
+                    using var doc = JsonDocument.Parse(line);
+                    if (doc.RootElement.TryGetProperty("message", out var msg) &&
+                        msg.TryGetProperty("content", out var contentProp))
+                    {
+                        sbOutput.Append(contentProp.GetString());
+                    }
+
+                    if (doc.RootElement.TryGetProperty("done", out var doneProp) &&
+                        doneProp.GetBoolean())
+                    {
+                        break; // finished
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Streaming parse error: " + ex.Message);
+                }
+            }
+
+            var assistantContent = sbOutput.ToString();
+            Console.WriteLine("Aggregated assistant output:");
+            Console.WriteLine(assistantContent);
+
+            if (!string.IsNullOrEmpty(assistantContent))
+            {
+                try
+                {
+                    categorization = JsonSerializer.Deserialize<List<CategorizationDto>>(assistantContent,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<CategorizationDto>();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Deserialization error: " + ex.Message);
+                }
+            }
 
             Console.WriteLine("Categorization:");
             foreach (var cat in categorization)
